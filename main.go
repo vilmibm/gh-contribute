@@ -20,7 +20,7 @@ type contributeOpts struct {
 func rootCmd() *cobra.Command {
 	opts := contributeOpts{}
 	cmd := &cobra.Command{
-		Use:   "contribute [<repository>]",
+		Use:   "contribute",
 		Short: "Suggest an issue to work on in a given repository",
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
