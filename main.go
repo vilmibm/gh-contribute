@@ -3,13 +3,36 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"os"
 	"os/exec"
 
 	"github.com/cli/safeexec"
+	"github.com/spf13/cobra"
 )
 
+func rootCmd() *cobra.Command {
+	return &cobra.Command{
+		Use: "contribute [<repository>]",
+	}
+
+	// TODO make runnable
+	// TODO add -R flag
+}
+
 func main() {
-	fmt.Println("TODO")
+	rc := rootCmd()
+
+	if err := rc.Execute(); err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err)
+		os.Exit(1)
+	}
+
+	sout, _, err := gh("issue", "list")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err)
+		os.Exit(1)
+	}
+	fmt.Println(sout.String())
 }
 
 // gh shells out to gh, returning STDOUT/STDERR and any error
