@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"os"
 	"os/exec"
 	"strings"
@@ -92,17 +93,35 @@ func runContribute(opts contributeOpts) error {
 		}
 	}
 
-	// TODO pick at random until we find one that isn't closed by a open PR
-	/*		pr, err := hasPR(opts.Repository, issue)
-			if err != nil || pr {
-				continue
-			} */
+	// TODO fix logic around PR checking, fix PR check
 
-	// TODO print nice thing
-	// TODO print url for clicking
-	for _, issue := range choices {
-		fmt.Printf("%d %s\n", issue.Number, issue.Title)
+	var chosen *issue
+	var prLookupErr error
+	for _, ix := range rand.Perm(len(choices)) {
+		pr, prLookupErr := hasPR(opts.Repository, choices[ix])
+		if prLookupErr != nil {
+			continue
+		}
+		if pr {
+			chosen = &choices[ix]
+		}
 	}
+
+	if chosen == nil {
+		if prLookupErr != nil {
+			return fmt.Errorf("failed talking to API about issues: %w", prLookupErr)
+		}
+
+		fmt.Println("Unable to find a good issue to suggest :( try perusing the repository with `gh issue list`.")
+
+		return nil
+	}
+
+	fmt.Printf("A good issue to work on in %s might be...\n", opts.Repository)
+	fmt.Printf("Issue #%d: %s\n\n", chosen.Number, chosen.Title)
+	fmt.Printf("You can check out the issue with `gh issue view %d`\n", chosen.Number)
+	fmt.Printf("Or express interest in working on it: `gh issue comment %d -b\"Hi! I'm interested in working on this\"`\n\n", chosen.Number)
+	fmt.Printf("View this issue on the web: %s\n", chosen.URL)
 
 	return nil
 }
