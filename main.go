@@ -87,13 +87,9 @@ func runContribute(opts contributeOpts) error {
 				continue
 			}
 
-			// TODO care about assignee?
-
 			choices = append(choices, issue)
 		}
 	}
-
-	// TODO fix logic around PR checking, fix PR check
 
 	var chosen *issue
 	var prLookupErr error
@@ -102,8 +98,9 @@ func runContribute(opts contributeOpts) error {
 		if prLookupErr != nil {
 			continue
 		}
-		if pr {
+		if !pr {
 			chosen = &choices[ix]
+			break
 		}
 	}
 
@@ -117,10 +114,12 @@ func runContribute(opts contributeOpts) error {
 		return nil
 	}
 
-	fmt.Printf("A good issue to work on in %s might be...\n", opts.Repository)
+	// TODO make prettier?
+
+	fmt.Printf("A good issue to work on in %s might be...\n\n", opts.Repository)
 	fmt.Printf("Issue #%d: %s\n\n", chosen.Number, chosen.Title)
-	fmt.Printf("You can check out the issue with `gh issue view %d`\n", chosen.Number)
-	fmt.Printf("Or express interest in working on it: `gh issue comment %d -b\"Hi! I'm interested in working on this\"`\n\n", chosen.Number)
+	fmt.Printf("You can check out the issue with `gh issue view -R%s %d`\n", opts.Repository, chosen.Number)
+	fmt.Printf("Or express interest in working on it: `gh issue comment -R%s %d -b\"Hi! I'm interested in working on this\"`\n\n", opts.Repository, chosen.Number)
 	fmt.Printf("View this issue on the web: %s\n", chosen.URL)
 
 	return nil
@@ -177,9 +176,12 @@ func hasPR(repository string, i issue) (bool, error) {
 		return false, err
 	}
 
-	// TODO process the result
-
-	fmt.Printf("DBG %#v\n", resp)
+	edges := resp.Data.Repository.Issue.TimelineItems.Edges
+	for _, edge := range edges {
+		if edge.Node.WillCloseTarget {
+			return true, nil
+		}
+	}
 
 	return false, nil
 }
