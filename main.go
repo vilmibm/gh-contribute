@@ -93,9 +93,11 @@ func runContribute(opts contributeOpts) error {
 
 	var chosen *issue
 	var prLookupErr error
+	rand.Seed(time.Now().UTC().UnixNano())
 	for _, ix := range rand.Perm(len(choices)) {
-		pr, prLookupErr := hasPR(opts.Repository, choices[ix])
-		if prLookupErr != nil {
+		pr, err := hasPR(opts.Repository, choices[ix])
+		if err != nil {
+			prLookupErr = err
 			continue
 		}
 		if !pr {
@@ -137,7 +139,7 @@ func main() {
 func hasPR(repository string, i issue) (bool, error) {
 	repoParts := strings.Split(repository, "/")
 	query := fmt.Sprintf(`query {
-		repository(name:"%s", owner:"%s") {
+		repository(owner:"%s", name:"%s") {
 			issue(number: %d){
 				timelineItems(last:10, itemTypes:[CROSS_REFERENCED_EVENT]){
 					edges {
@@ -199,7 +201,7 @@ type issue struct {
 }
 
 func issuesByLabel(repository, label string) ([]issue, error) {
-	sout, _, err := gh("issue", "list", "-l", label, "-R", repository, "--json", "number,title,labels,url,createdAt")
+	sout, _, err := gh("issue", "list", "-L", "200", "-l", label, "-R", repository, "--json", "number,title,labels,url,createdAt")
 	if err != nil {
 		return nil, err
 	}
