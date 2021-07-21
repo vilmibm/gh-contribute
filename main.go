@@ -86,13 +86,18 @@ func runContribute(opts contributeOpts) error {
 				continue
 			}
 
-			// TODO filter out ones with pr
+			// TODO care about assignee?
 
 			choices = append(choices, issue)
 		}
 	}
 
-	// TODO do the random pick
+	// TODO pick at random until we find one that isn't closed by a open PR
+	/*		pr, err := hasPR(opts.Repository, issue)
+			if err != nil || pr {
+				continue
+			} */
+
 	// TODO print nice thing
 	// TODO print url for clicking
 	for _, issue := range choices {
@@ -109,6 +114,55 @@ func main() {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)
 	}
+}
+
+func hasPR(repository string, i issue) (bool, error) {
+	repoParts := strings.Split(repository, "/")
+	query := fmt.Sprintf(`query {
+		repository(name:"%s", owner:"%s") {
+			issue(number: %d){
+				timelineItems(last:10, itemTypes:[CROSS_REFERENCED_EVENT]){
+					edges {
+						node {
+							...on CrossReferencedEvent {
+								willCloseTarget}}}}}}}`,
+		repoParts[0],
+		repoParts[1],
+		i.Number)
+
+	sout, _, err := gh("api", "graphql", "-f", fmt.Sprintf("query=%s", query))
+	if err != nil {
+		return false, err
+	}
+
+	type response struct {
+		Data struct {
+			Repository struct {
+				Issue struct {
+					TimelineItems struct {
+						Edges []struct {
+							Node struct {
+								WillCloseTarget bool
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	var resp response
+
+	err = json.Unmarshal(sout.Bytes(), &resp)
+	if err != nil {
+		return false, err
+	}
+
+	// TODO process the result
+
+	fmt.Printf("DBG %#v\n", resp)
+
+	return false, nil
 }
 
 type label struct {
