@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math/rand"
 	"os"
@@ -42,8 +43,11 @@ func rootCmd() *cobra.Command {
 }
 
 func resolveRepository() (string, error) {
-	sout, _, err := gh("repo", "view")
+	sout, eout, err := gh("repo", "view")
 	if err != nil {
+		if strings.Contains(eout.String(), "not a git repository") {
+			return "", errors.New("Try running this command from inside a git repository or with the -R flag")
+		}
 		return "", err
 	}
 	viewOut := strings.Split(sout.String(), "\n")[0]
@@ -120,7 +124,7 @@ func runContribute(opts contributeOpts) error {
 
 	fmt.Printf("A good issue to work on in %s might be...\n\n", opts.Repository)
 	fmt.Printf("Issue #%d: %s\n\n", chosen.Number, chosen.Title)
-	fmt.Printf("You can check out the issue with `gh issue view -R%s %d`\n", opts.Repository, chosen.Number)
+	fmt.Printf("You can read the issue with `gh issue view -R%s %d`\n", opts.Repository, chosen.Number)
 	fmt.Printf("Or express interest in working on it: `gh issue comment -R%s %d -b\"Hi! I'm interested in working on this\"`\n\n", opts.Repository, chosen.Number)
 	fmt.Printf("View this issue on the web: %s\n", chosen.URL)
 
@@ -131,7 +135,8 @@ func main() {
 	rc := rootCmd()
 
 	if err := rc.Execute(); err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err)
+		// until I suppress cobra's own error printing, no need to double print errors.
+		// fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)
 	}
 }
