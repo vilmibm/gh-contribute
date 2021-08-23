@@ -1,9 +1,5 @@
 #!/bin/bash
 
-# osx 64bit
-# linux 32bit 64bit arm arm64
-# windows 32bit 64bit
-
 # TODO ARM support. figure out mapping to uname -m output.
 
 mkdir -p builds
