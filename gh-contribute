@@ -2,7 +2,7 @@
 set -e
 
 repo="vilmibm/gh-contribute"
-tag="v1.0.1"
+tag="v1.0.2"
 
 extensionPath="$(dirname "$0")"
 arch="$(uname -m)"
