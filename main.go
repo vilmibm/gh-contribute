@@ -25,6 +25,7 @@ func rootCmd() *cobra.Command {
 		Use:   "contribute",
 		Short: "Suggest an issue to work on in a given repository",
 		Args:  cobra.MaximumNArgs(1),
+		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if opts.Repository == "" {
 				repo, err := resolveRepository()
@@ -135,8 +136,7 @@ func main() {
 	rc := rootCmd()
 
 	if err := rc.Execute(); err != nil {
-		// until I suppress cobra's own error printing, no need to double print errors.
-		// fmt.Fprintf(os.Stderr, "%s\n", err)
+		fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)
 	}
 }
