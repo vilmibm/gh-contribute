@@ -11,8 +11,14 @@ gh extension install vilmibm/gh-contribute
 
 ## Usage
 ```
-gh contibute [-R `*repository*`]`
+gh contibute [flags]
 ```
+
+### Flags
+-h, --help          help for `contribute`
+-R, --repo string   Repository to contribuet to
+
+### Details
 
 The extension either uses the current repository or a repository suppled via `-R` like `gh` itself.
 
